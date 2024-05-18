@@ -170,7 +170,7 @@ inner_product_noises_list = []
 inner_product_signals2_list = []
 inner_product_noises2_list = []
 
-for i in range(10):
+for i in range(20):
     training_loss, test_loss, attn_signals, attn_noises, V_signals, V_noises, inner_product_signals, inner_product_noises, inner_product_signals2, inner_product_noises2 = track()
     training_loss_list.append(numpy.array(training_loss))
     test_loss_list.append(numpy.array(test_loss))
