@@ -5,12 +5,12 @@ import torch
 from matplotlib import pyplot as plt
 from torch import nn, optim
 
-M = 3
+M = 4
 d = 2048
 n = 16
-n_ = 100
+n_ = 10
 dh = 1024
-dv = 512
+dv = 256
 cp = 1
 
 
@@ -22,9 +22,9 @@ class TF(nn.Module):
         self.v = nn.Linear(d, dv, bias=False)
         self.fc = nn.Linear(dv, 1, bias=False)
         self.fc.requires_grad_(False)
-        self.q.weight.data /= 32
-        self.k.weight.data /= 32
-        self.v.weight.data /= 32
+        self.q.weight.data /= 64
+        self.k.weight.data /= 64
+        self.v.weight.data /= 64
 
     def compute_V(self, x):
         v = self.v(x)
@@ -76,8 +76,8 @@ def track():
     D_ = []
     D_Y_ = []
 
-    mu1 = make_mu1(300)
-    mu2 = make_mu2(300)
+    mu1 = make_mu1(25)
+    mu2 = make_mu2(25)
 
     for i in range(int(n / 2)):
         X = mu1.copy().reshape(1, d)
@@ -115,7 +115,7 @@ def track():
 
     model = TF().cuda()
 
-    optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0)
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0)
     loss_fn = nn.SoftMarginLoss().cuda()
     EPOCHS = 500
 
@@ -171,6 +171,7 @@ inner_product_signals2_list = []
 inner_product_noises2_list = []
 
 for i in range(20):
+    print(i)
     training_loss, test_loss, attn_signals, attn_noises, V_signals, V_noises, inner_product_signals, inner_product_noises, inner_product_signals2, inner_product_noises2 = track()
     training_loss_list.append(numpy.array(training_loss))
     test_loss_list.append(numpy.array(test_loss))
@@ -185,60 +186,59 @@ for i in range(20):
 
 plt.rc('text', usetex=True)
 matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']
+matplotlib.rcParams['xtick.labelsize'] = 13
+matplotlib.rcParams['ytick.labelsize'] = 13
+matplotlib.rcParams['figure.figsize'] = [8, 6]
 
 plt.figure(0)
-# plt.plot(training_loss, label="Training Loss")
-# plt.plot(test_loss, label="Test Loss")
 plt.errorbar(np.array(range(500)), np.mean(np.array(training_loss_list), axis=0),
-             yerr=np.std(np.array(training_loss_list), axis=0), errorevery=50, label="Training Loss")
+             yerr=2 * np.std(np.array(training_loss_list), axis=0), errorevery=50, label="Training Loss", linewidth=3)
 plt.errorbar(np.array(range(500)), np.mean(np.array(test_loss_list), axis=0),
-             yerr=np.std(np.array(test_loss_list), axis=0), errorevery=50, label="Test Loss")
-plt.xlabel('Training Iterations t', size=14)
+             yerr=2 * np.std(np.array(test_loss_list), axis=0), errorevery=50, label="Test Loss", linewidth=3)
+plt.xlabel('Training Iterations t', size=20)
 plt.legend()
-plt.savefig('loss_benign.png', dpi=600, bbox_inches='tight')
-# plt.show()
+plt.savefig('loss_benign.pdf', dpi=600, bbox_inches='tight')
 
 plt.figure(1)
 plt.errorbar(np.array(range(500)), np.mean(np.array(attn_signals_list), axis=0),
-             yerr=np.std(np.array(attn_signals_list), axis=0), errorevery=50,
-             label=r"attention on signal $\mathbf{\mu}_+$")
+             yerr=2 * np.std(np.array(attn_signals_list), axis=0), errorevery=50,
+             label=r"attention on signal $\mathbf{\mu}_+$", linewidth=3)
 plt.errorbar(np.array(range(500)), np.mean(np.array(attn_noises_list), axis=0),
-             yerr=np.std(np.array(attn_noises_list), axis=0), errorevery=50,
-             label=r"attention on noise $\mathbf{\xi}_2$")
-plt.xlabel('Training Iterations t', size=14)
+             yerr=2 * np.std(np.array(attn_noises_list), axis=0), errorevery=50,
+             label=r"attention on noise $\mathbf{\xi}_2$", linewidth=3)
+plt.xlabel('Training Iterations t', size=20)
 plt.legend()
-plt.savefig('attention_benign.png', dpi=600, bbox_inches='tight')
-# plt.show()
+plt.savefig('attention_benign.pdf', dpi=600, bbox_inches='tight')
 
 plt.figure(2)
 plt.errorbar(np.array(range(500)), np.mean(np.array(V_signals_list), axis=0),
-             yerr=np.std(np.array(V_signals_list), axis=0), errorevery=50,
-             label=r"$\mathbf{\mu}_+^\top \mathbf{W}_V^{(t)} \mathbf{w}_O$")
+             yerr=2 * np.std(np.array(V_signals_list), axis=0), errorevery=50,
+             label=r"$\mathbf{\mu}_+^\top \mathbf{W}_V^{(t)} \mathbf{w}_O$", linewidth=3)
 plt.errorbar(np.array(range(500)), np.mean(np.array(V_noises_list), axis=0),
-             yerr=np.std(np.array(V_noises_list), axis=0), errorevery=50,
-             label=r"$\mathbf{\xi}_2^\top \mathbf{W}_V^{(t)} \mathbf{w}_O$")
-plt.xlabel('Training Iterations t', size=14)
+             yerr=2 * np.std(np.array(V_noises_list), axis=0), errorevery=50,
+             label=r"$\mathbf{\xi}_2^\top \mathbf{W}_V^{(t)} \mathbf{w}_O$", linewidth=3)
+plt.xlabel('Training Iterations t', size=20)
 plt.legend()
-plt.savefig('V_benign.png', dpi=600, bbox_inches='tight')
+plt.savefig('V_benign.pdf', dpi=600, bbox_inches='tight')
 
 plt.figure(3)
 plt.errorbar(np.array(range(500)), np.mean(np.array(inner_product_signals_list), axis=0),
-             yerr=np.std(np.array(inner_product_signals_list), axis=0), errorevery=50,
-             label=r"$\mathbf{\mu}_+^{\top} \mathbf{W}_{Q}^{(t)} \mathbf{W}_{K}^{(t)\top} \mathbf{\mu}_+$")
+             yerr=2 * np.std(np.array(inner_product_signals_list), axis=0), errorevery=50,
+             label=r"$\mathbf{\mu}_+^{\top} \mathbf{W}_{Q}^{(t)} \mathbf{W}_{K}^{(t)\top} \mathbf{\mu}_+$", linewidth=3)
 plt.errorbar(np.array(range(500)), np.mean(np.array(inner_product_noises_list), axis=0),
-             yerr=np.std(np.array(inner_product_noises_list), axis=0), errorevery=50,
-             label=r"$\mathbf{\mu}_+^{\top} \mathbf{W}_{Q}^{(t)} \mathbf{W}_{K}^{(t)\top} \mathbf{\xi}_2$")
-plt.xlabel('Training Iterations t', size=14)
+             yerr=2 * np.std(np.array(inner_product_noises_list), axis=0), errorevery=50,
+             label=r"$\mathbf{\mu}_+^{\top} \mathbf{W}_{Q}^{(t)} \mathbf{W}_{K}^{(t)\top} \mathbf{\xi}_2$", linewidth=3)
+plt.xlabel('Training Iterations t', size=20)
 plt.legend()
-plt.savefig('QK_benign.png', dpi=600, bbox_inches='tight')
+plt.savefig('QK_benign.pdf', dpi=600, bbox_inches='tight')
 
 plt.figure(4)
 plt.errorbar(np.array(range(500)), np.mean(np.array(inner_product_signals2_list), axis=0),
-             yerr=np.std(np.array(inner_product_signals2_list), axis=0), errorevery=50,
-             label=r"$\mathbf{\xi}_i^{\top} \mathbf{W}_{Q}^{(t)} \mathbf{W}_{K}^{(t)\top} \mathbf{\mu}_+$")
+             yerr=2 * np.std(np.array(inner_product_signals2_list), axis=0), errorevery=50,
+             label=r"$\mathbf{\xi}_i^{\top} \mathbf{W}_{Q}^{(t)} \mathbf{W}_{K}^{(t)\top} \mathbf{\mu}_+$", linewidth=3)
 plt.errorbar(np.array(range(500)), np.mean(np.array(inner_product_noises2_list), axis=0),
-             yerr=np.std(np.array(inner_product_noises2_list), axis=0), errorevery=50,
-             label=r"$\mathbf{\xi}_i^{\top} \mathbf{W}_{Q}^{(t)} \mathbf{W}_{K}^{(t)\top} \mathbf{\xi}_2$")
-plt.xlabel('Training Iterations t', size=14)
+             yerr=2 * np.std(np.array(inner_product_noises2_list), axis=0), errorevery=50,
+             label=r"$\mathbf{\xi}_i^{\top} \mathbf{W}_{Q}^{(t)} \mathbf{W}_{K}^{(t)\top} \mathbf{\xi}_2$", linewidth=3)
+plt.xlabel('Training Iterations t', size=20)
 plt.legend()
-plt.savefig('QK2_benign.png', dpi=600, bbox_inches='tight')
+plt.savefig('QK2_benign.pdf', dpi=600, bbox_inches='tight')
