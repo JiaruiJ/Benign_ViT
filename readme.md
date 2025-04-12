@@ -7,3 +7,7 @@ Run python heatmap.py for generating the heatmap
 Run python training_dynamic_benign.py for tracking the training dynamics under benign overfitting setting
 
 Run python training_dynamic_harmful.py for tracking the training dynamics under harmful overfitting setting
+
+Run python mnist.py for the MNIST experiments
+
+Run python heatmap2.py for generating the heatmap of MNIST experiments
